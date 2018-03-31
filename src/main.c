@@ -2,23 +2,16 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
-#include <dirent.h>
+
+#include "fs/fs.h"
 
 int
-show_file_info(const char *file_name)
+show_file_info(char *filename, struct stat file_info)
 {
-	struct stat file_info;
-
-	if (stat(file_name, &file_info) == -1)
-	{
-		fprintf(stderr, "[show_file_info] Error(%d): %s\n", errno, strerror(errno));
-		return -1;
-	}
-
+	printf("Filename: %s\n", filename);
 	printf("Minor=%d\tMajor=%d\n", minor(file_info.st_dev), major(file_info.st_dev));
 	printf("I-node: %ld\n", file_info.st_ino);
 
@@ -60,29 +53,32 @@ show_file_info(const char *file_name)
 	printf("Last access time:%s", ctime(&file_info.st_atime));
 	printf("Last modification time:%s", ctime(&file_info.st_mtime));
 	printf("Last status change:%s", ctime(&file_info.st_ctime));
+	printf("\n");
 
 	return 0;
+}
+
+void
+show_dir_info(struct dir_info d_info)
+{
+	printf("Dir %s contains %d files:\n", d_info.pathname, d_info.num_nodes);
+	struct file_node *current = d_info.first;
+
+	while (current != NULL)
+	{
+		show_file_info(current->filename, current->f_info);
+		current = current->next;
+	}
 }
 
 int
 main(int argc, char const *argv[])
 {
-	DIR *dir;
-	struct dirent *dir_info;
+	struct dir_info d_info;
+	if (get_dir_info(argv[1], &d_info) == -1)
+		fprintf(stderr, "Error could not read dir\n");
 
-	if ((dir = opendir(argv[1])) == NULL)
-	{
-		fprintf(stderr, "Error(%d): %s\n", errno, strerror(errno));
-		return -1;
-	}
-
-	while ((dir_info = readdir(dir)) != NULL)
-	{
-		char filename[256];
-		printf("Showing info for %s/%s\n", argv[1], dir_info->d_name);
-		sprintf(filename, "%s/%s", argv[1], dir_info->d_name);
-		show_file_info(filename);
-	}
+	show_dir_info(d_info);
 	
 	return 0;
 }
