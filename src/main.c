@@ -8,11 +8,11 @@
 #include <time.h>
 
 int
-main(int argc, char const *argv[])
+show_file_info(const char *file_name)
 {
 	struct stat file_info;
 
-	if (stat(argv[1], &file_info) == -1)
+	if (stat(file_name, &file_info) == -1)
 	{
 		fprintf(stderr, "Error(%d): %s\n", errno, strerror(errno));
 		return -1;
@@ -59,5 +59,14 @@ main(int argc, char const *argv[])
 	printf("Last access time:%s", ctime(&file_info.st_atime));
 	printf("Last modification time:%s", ctime(&file_info.st_mtime));
 	printf("Last status change:%s", ctime(&file_info.st_ctime));
+
+	return 0;
+}
+
+int
+main(int argc, char const *argv[])
+{
+	show_file_info(argv[1]);
+	
 	return 0;
 }
