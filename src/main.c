@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
+#include <dirent.h>
 
 int
 show_file_info(const char *file_name)
@@ -14,7 +15,7 @@ show_file_info(const char *file_name)
 
 	if (stat(file_name, &file_info) == -1)
 	{
-		fprintf(stderr, "Error(%d): %s\n", errno, strerror(errno));
+		fprintf(stderr, "[show_file_info] Error(%d): %s\n", errno, strerror(errno));
 		return -1;
 	}
 
@@ -66,7 +67,22 @@ show_file_info(const char *file_name)
 int
 main(int argc, char const *argv[])
 {
-	show_file_info(argv[1]);
+	DIR *dir;
+	struct dirent *dir_info;
+
+	if ((dir = opendir(argv[1])) == NULL)
+	{
+		fprintf(stderr, "Error(%d): %s\n", errno, strerror(errno));
+		return -1;
+	}
+
+	while ((dir_info = readdir(dir)) != NULL)
+	{
+		char filename[256];
+		printf("Showing info for %s/%s\n", argv[1], dir_info->d_name);
+		sprintf(filename, "%s/%s", argv[1], dir_info->d_name);
+		show_file_info(filename);
+	}
 	
 	return 0;
 }
